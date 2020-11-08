@@ -1,7 +1,7 @@
 var express = require('express');
 var router = express.Router();
 var bcrypt = require('bcryptjs');
-var db = require('../helpers/dbhelper').pool;
+var pool = require('../helpers/dbhelper').pool;
 
 
 
@@ -10,8 +10,8 @@ var isConnected = false;
 router.get('/getallusers', async (req,res) => {
   if(isConnected){
     let q = `SELECT * FROM users`
-    let resp = await db.query(q);
-    res.json(resp);
+    let resp = await pool.query(q);
+    res.json(resp[0]);
   }
   else {
     res.redirect('http://localhost:4200/');
@@ -22,8 +22,8 @@ router.get('/getallusers', async (req,res) => {
 router.get('/getusertypes', async (req,res) => {
   // if(req.session.connectedUser){}
   let q = `SELECT * FROM roles`;
-  let resp = await db.query(q);
-  res.json(resp);
+  let resp = await pool.query(q);
+  res.status(200).json(resp[0]);
 })
 
 router.post('/login', async function(req, res, next) {
@@ -31,15 +31,15 @@ router.post('/login', async function(req, res, next) {
   let password = req.body.password;
   let q = `SELECT * FROM users WHERE email='${username}'`;
   
-  let userArr = await db.query(q);
-  if (userArr.length>0) {
-    await bcrypt.compare(password, userArr[0].password , function(err, result) {
+  let userArr = await pool.query(q);
+  if (userArr[0].length>0) {
+    await bcrypt.compare(password, userArr[0][0].password , function(err, result) {
       if (result) {
         isConnected = true;
-        req.session.connectedUser = userArr[0];
-        res.status(200).json({success:true, userConnected:req.session.connectedUser, isConnected:isConnected});
+        req.session.connectedUser = userArr[0][0];
+        res.status(200).json({success:true, userConnected: req.session.connectedUser, isConnected:isConnected});
       }
-      else{
+      else {
         res.json({ msg:'username or password not correct!!'})
       }
     })
@@ -61,7 +61,7 @@ router.post('/adduser', async (req,res) => {
       req.body.password = hash;
       let q = `INSERT INTO users (first_name,last_name,id_num,email,password,city,street,role)
       VALUES ('${req.body.firstName}','${req.body.lastName}','${req.body.idNum}','${req.body.email}','${req.body.password}','${req.body.city}','${req.body.street}',${role});`
-      let resp = await db.query(q);
+      let resp = await pool.query(q);
     });
 });
   res.json({msg:"save successfully!"});
@@ -84,7 +84,7 @@ else {
 
 router.delete('/deluser/:id', async function(req, res, next) {
   let q = `DELETE FROM users WHERE id_num='${req.params.id}';`
-  await db.query(q);
+  await pool.query(q);
   res.json({msg:`user with id number: ${req.params.id} was deleted successfully`})
 });
 

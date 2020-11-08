@@ -8,7 +8,7 @@ var bcrypt = require('bcryptjs');
 router.get('/allcity', async function(req, res, next) {
   let q = `SELECT * FROM cities`;
   let resp = await pool.query(q);
-  res.json(resp);
+  res.json(resp[0]);
 });
 
 router.get('/joinprodunits/:cart_id', async function(req, res) {
@@ -19,13 +19,13 @@ router.get('/joinprodunits/:cart_id', async function(req, res) {
   WHERE cart_unit.cart_id='${req.params.cart_id}'
   `
   let resp = await pool.query(q);
-  res.json(resp);
+  res.json(resp[0]);
 })
 
 router.get('/getcartunits/:cart_id', async function(req, res) {
   let q = `SELECT * FROM cart_unit WHERE cart_id='${req.params.cart_id}'`;
   let resp = await pool.query(q);
-  res.json(resp);
+  res.json(resp[0]);
 });
 
 
@@ -44,13 +44,13 @@ router.get('/getproducts', async function(req, res, next) {
   }
 
   let resp = await pool.query(q);
-  res.json(resp);
+  res.json(resp[0]);
 });
 
 router.get('/getcat', async function(req, res, next) {
   let q = `SELECT * FROM prod_category`;
   let resp = await pool.query(q);
-  res.json(resp);
+  res.json(resp[0]);
 
 });
 
@@ -66,7 +66,7 @@ router.post('/addprod', async function(req, res, next) {
   let q = `INSERT INTO product (name,cat_id,price,pic_url)
   VALUES ('${req.body.name}',${req.body.cat_id},${req.body.price},'${req.body.picture}');`
   let resp = await pool.query(q);
-  res.json(resp);
+  res.json(resp[0]);
 
 });
 
@@ -81,7 +81,7 @@ router.get('/checkcart/:id', async function(req, res, next) {
     res.json({msg:'404'});
   }
   
-  else{res.json(resp);}
+  else {res.json(resp[0]);}
 });
 
 router.post('/newcart', async function(req, res, next) {
@@ -91,8 +91,7 @@ router.post('/newcart', async function(req, res, next) {
   let resp1 = await pool.query(q);
   let q2 = `SELECT id FROM cart WHERE client_id='${req.body.client.id_num}' AND is_open='${true}'`;
   let resp2 = await pool.query(q2);
-  console.log(resp2)
-  res.json({msg:"new cart has been created!!",cartID:resp2[0].id});
+  res.json({msg:"new cart has been created!!",cartID:resp2[0][0].id});
 })
 
 
@@ -134,7 +133,7 @@ router.put('/updatecartitem/:cart_id', async function(req, res, next) {
     let q2 = `DELETE FROM cart_unit WHERE cart_id=${req.params.cart_id} && prod_id=${req.body.sentNewItem.prod.id_prod}`
     var resp = await pool.query(q2);
   }
-  res.json({resp:resp,msg:'unit quantity updated successfully'})
+  res.json({resp:resp[0],msg:'unit quantity updated successfully'})
 })
 
 router.delete('/clearcart/:cartID',async (req,res)=>{
@@ -155,9 +154,9 @@ router.post('/neworder', async function(req, res) {
 
   let getQuery = `SELECT * FROM orders WHERE delivery_date = '${deliveryDate}'`
   let resp1 = await pool.query(getQuery);
-  var creditCard =String(req.body.order.creditCard) ;
+  var creditCard = String(req.body.order.creditCard) ;
 
-  if(resp1.length < 3){
+  if(resp1[0].length < 3){
     bcrypt.genSalt(10, function(err, salt) {
       bcrypt.hash(creditCard, salt, async function(err, hash) {
         if(err) throw err;
@@ -170,7 +169,7 @@ router.post('/neworder', async function(req, res) {
         let q4 = `SELECT id_order FROM orders WHERE client_id='${req.body.extras.userID}' AND cart_id='${req.body.extras.cartID}'`
         await pool.query(q3);
         let resp3 = await pool.query(q4);
-        res.status(200).json({msg:'Order was submitted successfully!!',orderID:resp3[0].id_order});
+        res.status(200).json({msg:'Order was submitted successfully!!',orderID:resp3[0][0].id_order});
         })
       })
   }
@@ -186,7 +185,7 @@ router.get('/allorders', async function(req, res) {
   ON orders.client_id=users.id_num
   `;
   let resp = await pool.query(q);
-  res.json(resp);
+  res.json(resp[0]);
 });
 
 
@@ -199,7 +198,7 @@ router.delete('/delorder/:id', async function(req, res) {
 router.get('/getcart/:id', async function(req, res, next) {
   let q = `SELECT * FROM cart WHERE client_id=${req.params.id}`;
   let resp = await pool.query(q);
-  res.json(resp);
+  res.json(resp[0]);
 });
 
 module.exports = router;

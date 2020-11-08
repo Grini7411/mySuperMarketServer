@@ -5,11 +5,20 @@ var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var cors = require('cors');
 var bcrypt = require('bcryptjs');
+var session = require('express-session')
+
 
 var smoRouter = require('./routes/smo');
 var usersRouter = require('./routes/users');
 
 var app = express();
+
+app.use(session({
+  secret: 'viperben',
+  resave: false,
+  saveUninitialized: true,
+  cookie: { secure: false }
+}))
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
